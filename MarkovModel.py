@@ -100,15 +100,15 @@ class MarkovModel:
         for symbol in important_symbols:
             for next_symbol in self.transition_matrix[symbol]:
                 self.transition_matrix[symbol][next_symbol] /= self.symbol_count_no_smoothing[symbol]
-                if self.transition_matrix[symbol][next_symbol] != 0:
+                if bool(self.transition_matrix[symbol][next_symbol]):
                     self.transition_matrix[symbol][next_symbol] = math.log(self.transition_matrix[symbol][next_symbol])
             for emission_char in self.emission_matrix[symbol]:
                 self.emission_matrix[symbol][emission_char] /= self.symbol_count_with_smoothing[symbol]
-                if self.emission_matrix[symbol][emission_char]:
+                if bool(self.emission_matrix[symbol][emission_char]):
                     self.emission_matrix[symbol][emission_char] = math.log(self.emission_matrix[symbol][emission_char])
         for start_transition in self.transition_matrix['s']:
             self.transition_matrix['s'][start_transition] /= self.symbol_count_no_smoothing['s']
-            if self.transition_matrix['s'][start_transition] != 0:
+            if bool(self.transition_matrix['s'][start_transition]):
                 self.transition_matrix['s'][start_transition] = math.log(self.transition_matrix['s'][start_transition])
 
     @staticmethod
