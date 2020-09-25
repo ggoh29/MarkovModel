@@ -289,8 +289,6 @@ class MarkovModel:
         predict_by_rules returns the best possible sequence that satisfies some constraints
         :return: a sequence of symbols
         '''
-        # Ok here I am a bit of a python noob and im not sure how to pass class methods as arguments
-        # The methods cant be static as I need self.constraints in predict_by_rules
         sequence = method.__func__(transaction_txt, self.emission_matrix, self.transition_matrix, to_consider, constraints)
 
         return sequence
