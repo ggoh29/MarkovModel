@@ -248,12 +248,14 @@ class MarkovModel:
                 prev_symbol = prev_chain[i-1]
                 prev_prob = cur_node[prev_chain]
                 cur_emission = transaction_txt[i]
+                j = 0
                 for symbol in possible_states:
                     temp = {prev_chain + symbol: prev_prob
                                                   + transition_matrix[prev_symbol][symbol]
                                                   + emission_matrix[symbol][cur_emission]
-                                                  + end_transition_dict.get(i, [0 for i in possible_states])[1]}
+                                                  + end_transition_dict.get(i, [0 for i in possible_states])[j]}
                     queue.append(temp)
+                    j += 1
                 queue.pop(0)
         queue.pop(len(queue) - 1)
         size_of_leaves = len(queue)
