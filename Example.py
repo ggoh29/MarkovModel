@@ -26,7 +26,7 @@ with open(training_file, 'w', newline='') as output:
     writer = csv.writer(output)
     writer.writerow(['emission', 'hidden'])
     for i in range(500):
-        writer.writerow(make_e_and_h)
+        writer.writerow(make_e_and_h())
 
 
 # making a viterbi test and training it
