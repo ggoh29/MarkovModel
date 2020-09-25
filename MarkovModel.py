@@ -205,40 +205,6 @@ class MarkovModel:
                 MarkovModel.quick_sort(lst, counter, end)
                 MarkovModel.quick_sort(lst, start, counter)
 
-    def satisfies_constraints(self, text_to_be_examined):
-        '''
-        :param text_to_be_examined:
-        :return: boolean if text satisfies constraints
-        Current the constraints are:
-            - if there are f symbols, they must be between max_f and min_f
-            - the number of t symbols must be greater than min_t
-            - if there are t symbols, they must be contiguous
-
-
-        If all other chains fail, the first sequence is selected
-        '''
-        first_condition = self.min_f <= text_to_be_examined.count('f') <= self.max_f
-
-        secnd_condition = self.min_t <= text_to_be_examined.count('t')
-
-        third_condition = True
-        seen_t = False
-        past_t = False
-        for i in range(len(text_to_be_examined)):
-            char = text_to_be_examined[i]
-            if char == 't':
-                if seen_t:
-                    if past_t:
-                        third_condition = False
-                        break
-                else:
-                    seen_t = True
-            else:
-                if seen_t:
-                    past_t = True
-
-        return first_condition and secnd_condition and third_condition
-
     @staticmethod
     def predict_by_rules(transaction_txt,emission_matrix, transition_matrix, to_consider, constraints):
         '''
