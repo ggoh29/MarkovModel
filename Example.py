@@ -20,7 +20,7 @@ def make_e_and_h():
     h += 'e'
     return[e,h]
 
-training_file = "C:/Users/ggoh/Documents/train.csv"
+training_file = "path to train.csv"
 
 with open(training_file, 'w', newline='') as output:
     writer = csv.writer(output)
@@ -31,7 +31,7 @@ with open(training_file, 'w', newline='') as output:
 
 # making a viterbi test and training it
 
-viterbi_test = "C:/Users/ggoh/Documents/predict_by_viterbi_test.csv"
+viterbi_test = "path to predict_by_viterbi_test.csv"
 
 with open(viterbi_test, 'w', newline='') as output:
     writer = csv.writer(output)
@@ -53,7 +53,7 @@ testing_df.to_csv(viterbi_test)
 
 # making a rules test and training it
 
-rules_test = "C:/Users/ggoh/Documents/predict_by_rules_test.csv"
+rules_test = "path to predict_by_rules_test.csv"
 
 with open(rules_test, 'w', newline='') as output:
     writer = csv.writer(output)
