@@ -28,11 +28,9 @@ class MarkovModel:
         :param df: dataframe of transaction text in row[0] and hidden state text in row[1]
         builds an emission and transition matrix from the df
         '''
-        cols = df.columns
         for index, row in df.iterrows():
-            emitted = row[cols[0]]
-            # change back to 1
-            hidden = row[cols[3]]
+            emitted = row[0]
+            hidden = row[1]
             if len(emitted) + 2 != len(hidden):
                 raise Exception("Hidden layer must have a length greater than the emission layer by a size of 2")
             for i in range(len(emitted)):
@@ -69,7 +67,7 @@ class MarkovModel:
                         self.emission_matrix[symbol][character] = 1
                         self.symbol_count_with_smoothing [symbol] += 1
         for index, row in df.iterrows():
-            self.build_matrix(row[0], row[3])
+            self.build_matrix(row[0], row[1])
         self.get_probabilities()
 
     def build_matrix(self, transaction_txt, transaction_hidden):
@@ -94,7 +92,9 @@ class MarkovModel:
         '''
         :return: Converts the count of characters/symbols in all matrices to probabilities
         '''
-        important_symbols = ['t', 'f']
+        important_symbols = self.symbol_count_no_smoothing.copy()
+        del important_symbols['s']
+        del important_symbols['e']
         for symbol in important_symbols:
             for next_symbol in self.transition_matrix[symbol]:
                 self.transition_matrix[symbol][next_symbol] /= self.symbol_count_no_smoothing[symbol]
