@@ -28,9 +28,11 @@ class MarkovModel:
         :param df: dataframe of transaction text in row[0] and hidden state text in row[1]
         builds an emission and transition matrix from the df
         '''
+        cols = df.columns
         for index, row in df.iterrows():
-            emitted = row[0]
-            hidden = row[1]
+            emitted = row[cols[0]]
+            # change back to 1
+            hidden = row[cols[1]]
             if len(emitted) + 2 != len(hidden):
                 raise Exception("Hidden layer must have a length greater than the emission layer by a size of 2")
             for i in range(len(emitted)):
@@ -98,13 +100,16 @@ class MarkovModel:
         for symbol in important_symbols:
             for next_symbol in self.transition_matrix[symbol]:
                 self.transition_matrix[symbol][next_symbol] /= self.symbol_count_no_smoothing[symbol]
-                self.transition_matrix[symbol][next_symbol] = math.log(self.transition_matrix[symbol][next_symbol])
+                if self.transition_matrix[symbol][next_symbol] != 0:
+                    self.transition_matrix[symbol][next_symbol] = math.log(self.transition_matrix[symbol][next_symbol])
             for emission_char in self.emission_matrix[symbol]:
                 self.emission_matrix[symbol][emission_char] /= self.symbol_count_with_smoothing[symbol]
-                self.emission_matrix[symbol][emission_char] = math.log(self.emission_matrix[symbol][emission_char])
+                if self.emission_matrix[symbol][emission_char]:
+                    self.emission_matrix[symbol][emission_char] = math.log(self.emission_matrix[symbol][emission_char])
         for start_transition in self.transition_matrix['s']:
             self.transition_matrix['s'][start_transition] /= self.symbol_count_no_smoothing['s']
-            self.transition_matrix['s'][start_transition] = math.log(self.transition_matrix['s'][start_transition])
+            if self.transition_matrix['s'][start_transition] != 0:
+                self.transition_matrix['s'][start_transition] = math.log(self.transition_matrix['s'][start_transition])
 
     @staticmethod
     def predict_by_viterbi(transaction_txt, emission_matrix, transition_matrix, to_consider=1, constraints = None):
@@ -275,7 +280,7 @@ class MarkovModel:
         '''
         :param transaction_txt: text to be examined
         :param method: method by which to extract best sequence
-        :param to_consider: How many sequences are considered for predict_by_rules. Needs to be large to 
+        :param to_consider: How many sequences are considered for predict_by_rules. Needs to be large to
         avoid being too greedy but small enough not to hurt the complexity
         :param constraints: list of user defined functions that return a boolean which the predicted
         hidden layer must statisfy
@@ -289,22 +294,6 @@ class MarkovModel:
         sequence = method.__func__(transaction_txt, self.emission_matrix, self.transition_matrix, to_consider, constraints)
 
         return sequence
-
-
-
-
-        
-
-
-
-
-
-
-
-
-
-
-       
 
 
 
