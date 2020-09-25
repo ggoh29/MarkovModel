@@ -46,7 +46,7 @@ class MarkovModel:
                 raise Exception("Start of hidden layer must be 's'")
 
             if hidden[len(hidden)-1] != 'e':
-                raise Exception("Start of hidden layer must be 's'")
+                raise Exception("End of hidden layer must be 'e'")
 
         self.all_hidden_characters['s'] = 0
         self.all_hidden_characters['e'] = 0
