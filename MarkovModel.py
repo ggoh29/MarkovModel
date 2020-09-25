@@ -28,9 +28,11 @@ class MarkovModel:
         :param df: dataframe of transaction text in row[0] and hidden state text in row[1]
         builds an emission and transition matrix from the df
         '''
+        cols = df.columns
         for index, row in df.iterrows():
-            emitted = row[0]
-            hidden = row[1]
+            emitted = row[cols[0]]
+            # change back to 1
+            hidden = row[cols[3]]
             if len(emitted) + 2 != len(hidden):
                 raise Exception("Hidden layer must have a length greater than the emission layer by a size of 2")
             for i in range(len(emitted)):
@@ -67,7 +69,7 @@ class MarkovModel:
                         self.emission_matrix[symbol][character] = 1
                         self.symbol_count_with_smoothing [symbol] += 1
         for index, row in df.iterrows():
-            self.build_matrix(row[0], row[1])
+            self.build_matrix(row[0], row[3])
         self.get_probabilities()
 
     def build_matrix(self, transaction_txt, transaction_hidden):
@@ -96,10 +98,13 @@ class MarkovModel:
         for symbol in important_symbols:
             for next_symbol in self.transition_matrix[symbol]:
                 self.transition_matrix[symbol][next_symbol] /= self.symbol_count_no_smoothing[symbol]
+                self.transition_matrix[symbol][next_symbol] = math.log(self.transition_matrix[symbol][next_symbol])
             for emission_char in self.emission_matrix[symbol]:
                 self.emission_matrix[symbol][emission_char] /= self.symbol_count_with_smoothing[symbol]
+                self.emission_matrix[symbol][emission_char] = math.log(self.emission_matrix[symbol][emission_char])
         for start_transition in self.transition_matrix['s']:
             self.transition_matrix['s'][start_transition] /= self.symbol_count_no_smoothing['s']
+            self.transition_matrix['s'][start_transition] = math.log(self.transition_matrix['s'][start_transition])
 
     @staticmethod
     def predict_by_viterbi(transaction_txt, emission_matrix, transition_matrix, to_consider=1, constraints = None):
@@ -114,8 +119,7 @@ class MarkovModel:
         prob_previous = [{}]
         back_tracking = []
         for state in possible_states:
-            prob_previous[0][state] = math.log(
-                transition_matrix['s'][state] * emission_matrix[state][transaction_txt[0]])
+            prob_previous[0][state] = transition_matrix['s'][state] + emission_matrix[state][transaction_txt[0]]
         for i in range(1, len(transaction_txt)):
             prob_at_this_point = {}
             best_at_this_point = {}
@@ -124,8 +128,7 @@ class MarkovModel:
             for state_cur in possible_states:
                 mx = -math.inf
                 for state_prev in possible_states:
-                    cur_mx = previous[state_prev] + math.log(
-                        emission_matrix[state_cur][cur_emission] * transition_matrix[state_prev][state_cur])
+                    cur_mx = previous[state_prev] + emission_matrix[state_cur][cur_emission] + transition_matrix[state_prev][state_cur]
                     if cur_mx > mx:
                         best_prev = state_prev
                         mx = cur_mx
@@ -137,7 +140,7 @@ class MarkovModel:
         # Special consideration for the end of the string
         last_mx = -math.inf
         for end_states in possible_states:
-            prob_at_end = prob_at_this_point[end_states] + math.log(transition_matrix[end_states]['e'])
+            prob_at_end = prob_at_this_point[end_states] + transition_matrix[end_states]['e']
             if prob_at_end > last_mx:
                 last_state = end_states
                 last_mx = prob_at_end
@@ -217,12 +220,11 @@ class MarkovModel:
         del possible_states['s']
         del possible_states['e']
         queue = []
-        left = {'t': math.log10(transition_matrix['s']['t'] * emission_matrix['t'][transaction_txt[0]])}
-        right = {'f': math.log10(transition_matrix['s']['f'] * emission_matrix['f'][transaction_txt[0]])}
-        queue.append(left)
-        queue.append(right)
+        for symbol in possible_states:
+            start = {symbol: transition_matrix['s'][symbol] + emission_matrix[symbol][transaction_txt[0]]}
+            queue.append(start)
 
-        special_transition_dict = {txt_len-1: [transition_matrix['t']['e'], transition_matrix['f']['e']]}
+        end_transition_dict = {txt_len-1: [transition_matrix[symbol]['e'] for symbol in possible_states]}
         # Using -1 to demarcate a new level in the tree
         queue.append(-1)
         i = 1
@@ -241,16 +243,12 @@ class MarkovModel:
                 prev_symbol = prev_chain[i-1]
                 prev_prob = cur_node[prev_chain]
                 cur_emission = transaction_txt[i]
-                left = {prev_chain + 't': prev_prob + math.log10(
-                    transition_matrix[prev_symbol]['t']
-                    * emission_matrix['t'][cur_emission]
-                    * special_transition_dict.get(i, [1, 1])[0])}
-                right = {prev_chain + 'f': prev_prob + math.log10(
-                    transition_matrix[prev_symbol]['f']
-                    * emission_matrix['f'][cur_emission]
-                    * special_transition_dict.get(i, [1, 1])[1])}
-                queue.append(left)
-                queue.append(right)
+                for symbol in possible_states:
+                    temp = {prev_chain + symbol: prev_prob
+                                                  + transition_matrix[prev_symbol][symbol]
+                                                  + emission_matrix[symbol][cur_emission]
+                                                  + end_transition_dict.get(i, [0 for i in possible_states])[1]}
+                    queue.append(temp)
                 queue.pop(0)
         queue.pop(len(queue) - 1)
         size_of_leaves = len(queue)
@@ -265,7 +263,7 @@ class MarkovModel:
             current_chain = list(possible_chain.keys())[0]
             satisfies_constrains = True
             for fun in constraints:
-                satisfies_constrains = satisfies_constrains and bool(fun(current_chain))
+                satisfies_constrains = satisfies_constrains and bool(fun.__func__(current_chain))
             if satisfies_constrains:
                 return current_chain
 
@@ -273,7 +271,7 @@ class MarkovModel:
         return list(queue[0].keys())[0]
 
 
-    def predict(self, transaction_txt, method = predict_by_viterbi, to_consider = 10, constraints = []):
+    def predict(self, transaction_txt, method = predict_by_viterbi, to_consider = 1000, constraints = []):
         '''
         :param transaction_txt: text to be examined
         :param method: method by which to extract best sequence
@@ -283,9 +281,28 @@ class MarkovModel:
         possible methods are [predict_by_rules, predict_by_viterbi]
         predict_by_viterbi returns the best possible sequence
         predict_by_rules returns the best possible sequence that satisfies some constraints
-        :return: The predicted hidden sequence
+        :return: a sequence of symbols
         '''
-        return method.__func__(transaction_txt, self.emission_matrix, self.transition_matrix, to_consider, constraints)
+        # Ok here I am a bit of a python noob and im not sure how to pass class methods as arguments
+        # The methods cant be static as I need self.constraints in predict_by_rules
+        sequence = method.__func__(transaction_txt, self.emission_matrix, self.transition_matrix, to_consider, constraints)
+
+        return sequence
+
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
        
 
 
