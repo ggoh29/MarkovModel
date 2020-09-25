@@ -235,7 +235,7 @@ class MarkovModel:
         queue.append(-1)
         i = 1
 
-        while i < txt_len - 1:
+        while i < txt_len:
             if queue[0] == -1:
                 queue.pop(0)
                 if len(queue) > to_consider:
