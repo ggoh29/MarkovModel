@@ -275,7 +275,8 @@ class MarkovModel:
         '''
         :param transaction_txt: text to be examined
         :param method: method by which to extract best sequence
-        :param to_consider: How many sequences are considered for predict_by_rules.
+        :param to_consider: How many sequences are considered for predict_by_rules. Needs to be large to 
+        avoid being too greedy but small enough not to hurt the complexity
         :param constraints: list of user defined functions that return a boolean which the predicted
         hidden layer must statisfy
         possible methods are [predict_by_rules, predict_by_viterbi]
