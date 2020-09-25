@@ -28,11 +28,9 @@ class MarkovModel:
         :param df: dataframe of transaction text in row[0] and hidden state text in row[1]
         builds an emission and transition matrix from the df
         '''
-        cols = df.columns
         for index, row in df.iterrows():
-            emitted = row[cols[0]]
-            # change back to 1
-            hidden = row[cols[3]]
+            emitted = row[0]
+            hidden = row[1]
             if len(emitted) + 2 != len(hidden):
                 raise Exception("Hidden layer must have a length greater than the emission layer by a size of 2")
             for i in range(len(emitted)):
@@ -69,7 +67,7 @@ class MarkovModel:
                         self.emission_matrix[symbol][character] = 1
                         self.symbol_count_with_smoothing [symbol] += 1
         for index, row in df.iterrows():
-            self.build_matrix(row[0], row[3])
+            self.build_matrix(row[0], row[1])
         self.get_probabilities()
 
     def build_matrix(self, transaction_txt, transaction_hidden):
@@ -319,19 +317,10 @@ class MarkovModel:
         possible methods are [predict_by_rules, predict_by_viterbi]
         predict_by_viterbi returns the best possible sequence
         predict_by_rules returns the best possible sequence that satisfies some constraints
-        :return: a sequence of symbols
+        :return: The predicted hidden sequence
         '''
-        # Ok here I am a bit of a python noob and im not sure how to pass class methods as arguments
-        # The methods cant be static as I need self.constraints in predict_by_rules
-        print(self.emission_matrix)
-        sequence = method.__func__(transaction_txt, self.emission_matrix, self.transition_matrix, to_consider, constraints)
-        result = ''
-        print(sequence)
-        for i in range(len(sequence)):
-            if sequence[i] == 't':
-                result += transaction_txt[i]
-
-        return result
+        return method.__func__(transaction_txt, self.emission_matrix, self.transition_matrix, to_consider, constraints)
+       
 
 
 
