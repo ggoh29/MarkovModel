@@ -254,7 +254,7 @@ class MarkovModel:
                     temp = {prev_chain + symbol: prev_prob
                                                  + transition_matrix[prev_symbol][symbol]
                                                  + emission_matrix[symbol][cur_emission]
-                                                 + end_transition_dict.get(i, [0 for i in possible_states])[j]}
+                                                 + end_transition_dict.get(i, [0 for k in possible_states])[j]}
                     queue.append(temp)
                     j += 1
                 queue.pop(0)
