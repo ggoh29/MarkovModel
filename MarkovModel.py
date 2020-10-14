@@ -185,7 +185,7 @@ class MarkovModel:
             elif counter == end - 1:
                 MarkovModel.quick_partition(lst, start, end - 1, size)
             elif counter < size:
-                MarkovModel.quick_partition(lst, counter, end, size - counter)
+                MarkovModel.quick_partition(lst, counter, end, size)
             elif counter > size:
                 MarkovModel.quick_partition(lst, start, counter, size)
 
