@@ -181,7 +181,7 @@ class MarkovModel:
                     lst[i] = temp
                     counter += 1
             if counter == start:
-                MarkovModel.quick_partition(lst, start + 1, end, size - 1)
+                MarkovModel.quick_partition(lst, start + 1, end, size)
             elif counter == end - 1:
                 MarkovModel.quick_partition(lst, start, end - 1, size)
             elif counter < size:
